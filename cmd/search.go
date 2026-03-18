@@ -85,7 +85,11 @@ func runSearch(cmd *cobra.Command, args []string) error {
 
 	seatsSort.SortFlatRows(rows, sortKeys)
 
-	fmt.Print(format.FormatSearchMarkdown(from, to, date, rows, resp.HasMore))
+	if pretty {
+		fmt.Print(format.PrettySearch(from, to, date, rows, resp.HasMore))
+	} else {
+		fmt.Print(format.FormatSearchMarkdown(from, to, date, rows, resp.HasMore))
+	}
 
 	return nil
 }

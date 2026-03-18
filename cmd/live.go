@@ -55,6 +55,10 @@ func runLive(cmd *cobra.Command, args []string) error {
 		return handleAPIError(err)
 	}
 
-	fmt.Print(format.FormatLiveMarkdown(from, to, date, program, resp.Results))
+	if pretty {
+		fmt.Print(format.PrettyLive(from, to, date, program, resp.Results))
+	} else {
+		fmt.Print(format.FormatLiveMarkdown(from, to, date, program, resp.Results))
+	}
 	return nil
 }

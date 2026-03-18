@@ -77,10 +77,18 @@ func runAvailability(cmd *cobra.Command, args []string) error {
 			flatRows = append(flatRows, a.Flatten()...)
 		}
 		seatsSort.SortFlatRows(flatRows, sortKeys)
-		fmt.Print(format.FormatSearchMarkdown(program, "(bulk)", date, flatRows, resp.HasMore))
+		if pretty {
+			fmt.Print(format.PrettySearch(program, "(bulk)", date, flatRows, resp.HasMore))
+		} else {
+			fmt.Print(format.FormatSearchMarkdown(program, "(bulk)", date, flatRows, resp.HasMore))
+		}
 		return nil
 	}
 
-	fmt.Print(format.FormatAvailabilityMarkdown(program, date, endDate, cabin, resp.Data, resp.HasMore))
+	if pretty {
+		fmt.Print(format.PrettyAvailability(program, date, endDate, cabin, resp.Data, resp.HasMore))
+	} else {
+		fmt.Print(format.FormatAvailabilityMarkdown(program, date, endDate, cabin, resp.Data, resp.HasMore))
+	}
 	return nil
 }

@@ -29,6 +29,10 @@ func runTrip(cmd *cobra.Command, args []string) error {
 		return handleAPIError(err)
 	}
 
-	fmt.Print(format.FormatTripMarkdown(id, resp))
+	if pretty {
+		fmt.Print(format.PrettyTrip(id, resp))
+	} else {
+		fmt.Print(format.FormatTripMarkdown(id, resp))
+	}
 	return nil
 }

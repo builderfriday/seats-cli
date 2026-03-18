@@ -30,6 +30,10 @@ func runRoutes(cmd *cobra.Command, args []string) error {
 		return handleAPIError(err)
 	}
 
-	fmt.Print(format.FormatRoutesMarkdown(program, routes))
+	if pretty {
+		fmt.Print(format.PrettyRoutes(program, routes))
+	} else {
+		fmt.Print(format.FormatRoutesMarkdown(program, routes))
+	}
 	return nil
 }

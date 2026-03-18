@@ -11,7 +11,11 @@ var programsCmd = &cobra.Command{
 	Use:   "programs",
 	Short: "List available mileage programs",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Print(format.FormatProgramsMarkdown())
+		if pretty {
+			fmt.Print(format.PrettyPrograms())
+		} else {
+			fmt.Print(format.FormatProgramsMarkdown())
+		}
 		return nil
 	},
 }
