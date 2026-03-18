@@ -9,12 +9,9 @@ import (
 	"github.com/derek/seats-cli/internal/model"
 )
 
-// truncateID truncates an ID to at most 10 characters.
+// truncateID returns the ID as-is. Full IDs are needed for `seats trip`.
 func truncateID(id string) string {
-	if len(id) <= 10 {
-		return id
-	}
-	return id[:10]
+	return id
 }
 
 // formatNumber formats an integer with comma separators (e.g. 12500 → "12,500").

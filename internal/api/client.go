@@ -266,8 +266,10 @@ func (c *Client) apiError(code int) *APIError {
 		msg = "Invalid or missing API key."
 	case code == 429:
 		msg = "Rate limit exceeded (1,000 calls/day). Try again tomorrow."
+	case code == 404:
+		msg = "Not found — check the availability ID or parameters."
 	default:
-		msg = fmt.Sprintf("API returned %d — check airport codes.", code)
+		msg = fmt.Sprintf("API returned %d — check parameters.", code)
 	}
 	return &APIError{StatusCode: code, Message: msg}
 }
