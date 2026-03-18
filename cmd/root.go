@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/derek/seats-cli/internal/api"
 	"github.com/spf13/cobra"
 )
 
@@ -33,4 +34,15 @@ func init() {
 
 func Execute() error {
 	return rootCmd.Execute()
+}
+
+func handleAPIError(err error) error {
+	apiErr, ok := err.(*api.APIError)
+	if !ok {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(4)
+	}
+	fmt.Fprintf(os.Stderr, "Error: %s\n", apiErr.Message)
+	os.Exit(apiErr.ExitCode())
+	return nil
 }
