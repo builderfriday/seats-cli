@@ -20,6 +20,7 @@ var availabilityCmd = &cobra.Command{
 
 func init() {
 	availabilityCmd.Flags().String("program", "", "Mileage program")
+	availabilityCmd.Flags().String("transfer-partner", "", "Filter by transfer partner(s), comma-separated (e.g. chase,amex). Expands to matching programs; intersects with --program if both given.")
 	availabilityCmd.Flags().String("cabin", "", "economy, premium, business, first")
 	availabilityCmd.Flags().String("date", "", "Start date")
 	availabilityCmd.Flags().String("end-date", "", "End date")
@@ -29,14 +30,27 @@ func init() {
 	availabilityCmd.Flags().Int("limit", 50, "Max results (10-1000)")
 	availabilityCmd.Flags().Int("skip", 0, "Number of results to skip")
 
-	_ = availabilityCmd.MarkFlagRequired("program")
+	// Note: --program is required unless --transfer-partner is specified; validated at runtime.
 
 	rootCmd.AddCommand(availabilityCmd)
 }
 
 func runAvailability(cmd *cobra.Command, args []string) error {
 	program, _ := cmd.Flags().GetString("program")
+	transferPartner, _ := cmd.Flags().GetString("transfer-partner")
 	cabin, _ := cmd.Flags().GetString("cabin")
+
+	if transferPartner != "" {
+		expanded, err := expandTransferPartners(transferPartner, program)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		program = expanded
+	} else if program == "" {
+		fmt.Fprintln(os.Stderr, "Error: required flag(s) \"program\" not set (or use --transfer-partner)")
+		os.Exit(1)
+	}
 	date, _ := cmd.Flags().GetString("date")
 	endDate, _ := cmd.Flags().GetString("end-date")
 	originRegion, _ := cmd.Flags().GetString("origin-region")
