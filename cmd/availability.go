@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/derek/seats-cli/internal/api"
 	"github.com/derek/seats-cli/internal/format"
@@ -71,38 +72,61 @@ func runAvailability(cmd *cobra.Command, args []string) error {
 	}
 
 	client := api.NewClient(os.Getenv("SEATS_AERO_API_KEY"))
-	resp, err := client.Availability(api.AvailabilityParams{
-		Source:            program,
-		Cabin:             cabin,
-		StartDate:         date,
-		EndDate:           endDate,
-		OriginRegion:      originRegion,
-		DestinationRegion: destRegion,
-		Take:              limit,
-		Skip:              skip,
-	})
-	if err != nil {
-		return handleAPIError(err)
+
+	// The availability API accepts only a single source per call.
+	// When --transfer-partner expands to multiple programs, fan out and merge.
+	programs := strings.Split(program, ",")
+
+	var allData []model.Availability
+	hasMore := false
+	for _, prog := range programs {
+		prog = strings.TrimSpace(prog)
+		if prog == "" {
+			continue
+		}
+		resp, err := client.Availability(api.AvailabilityParams{
+			Source:            prog,
+			Cabin:             cabin,
+			StartDate:         date,
+			EndDate:           endDate,
+			OriginRegion:      originRegion,
+			DestinationRegion: destRegion,
+			Take:              limit,
+			Skip:              skip,
+		})
+		if err != nil {
+			return handleAPIError(err)
+		}
+		allData = append(allData, resp.Data...)
+		if resp.HasMore {
+			hasMore = true
+		}
+	}
+
+	// Use the first program name for display when only one program queried.
+	displayProgram := program
+	if len(programs) == 1 {
+		displayProgram = strings.TrimSpace(programs[0])
 	}
 
 	if sortStr != "" {
 		var flatRows []model.FlatRow
-		for _, a := range resp.Data {
+		for _, a := range allData {
 			flatRows = append(flatRows, a.Flatten()...)
 		}
 		seatsSort.SortFlatRows(flatRows, sortKeys)
 		if pretty {
-			fmt.Print(format.PrettySearch(program, "(bulk)", date, flatRows, resp.HasMore))
+			fmt.Print(format.PrettySearch(displayProgram, "(bulk)", date, flatRows, hasMore))
 		} else {
-			fmt.Print(format.FormatSearchMarkdown(program, "(bulk)", date, flatRows, resp.HasMore))
+			fmt.Print(format.FormatSearchMarkdown(displayProgram, "(bulk)", date, flatRows, hasMore))
 		}
 		return nil
 	}
 
 	if pretty {
-		fmt.Print(format.PrettyAvailability(program, date, endDate, cabin, resp.Data, resp.HasMore))
+		fmt.Print(format.PrettyAvailability(displayProgram, date, endDate, cabin, allData, hasMore))
 	} else {
-		fmt.Print(format.FormatAvailabilityMarkdown(program, date, endDate, cabin, resp.Data, resp.HasMore))
+		fmt.Print(format.FormatAvailabilityMarkdown(displayProgram, date, endDate, cabin, allData, hasMore))
 	}
 	return nil
 }
