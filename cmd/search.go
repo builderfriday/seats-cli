@@ -24,6 +24,7 @@ func init() {
 	searchCmd.Flags().String("end-date", "", "End date (YYYY-MM-DD)")
 	searchCmd.Flags().String("cabin", "", "Cabin class: economy, premium, business, first (comma-separated)")
 	searchCmd.Flags().String("program", "", "Mileage program filter (comma-separated)")
+	searchCmd.Flags().String("transfer-partner", "", "Filter by transfer partner(s), comma-separated (e.g. chase,amex). Expands to matching programs; intersects with --program if both given.")
 	searchCmd.Flags().String("carrier", "", "Airline filter (comma-separated)")
 	searchCmd.Flags().Bool("direct", false, "Nonstop flights only")
 	searchCmd.Flags().String("sort", "", "Sort keys: cabin, miles, stops, date, taxes, seats, airline (comma-separated)")
@@ -43,7 +44,17 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	endDate, _ := cmd.Flags().GetString("end-date")
 	cabin, _ := cmd.Flags().GetString("cabin")
 	program, _ := cmd.Flags().GetString("program")
+	transferPartner, _ := cmd.Flags().GetString("transfer-partner")
 	carrier, _ := cmd.Flags().GetString("carrier")
+
+	if transferPartner != "" {
+		expanded, err := expandTransferPartners(transferPartner, program)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		program = expanded
+	}
 	direct, _ := cmd.Flags().GetBool("direct")
 	sortStr, _ := cmd.Flags().GetString("sort")
 	limit, _ := cmd.Flags().GetInt("limit")
